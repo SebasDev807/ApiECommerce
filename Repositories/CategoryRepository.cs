@@ -22,7 +22,6 @@ public class CategoryRepository : ICategoryRepository
         _db.Categories.Any(category => category.Name.ToLower() == name.ToLower().Trim());
 
 
-
     public bool CreateCategory(Category category)
     {
         category.CreationDate = DateTime.Now;
@@ -40,8 +39,8 @@ public class CategoryRepository : ICategoryRepository
         _db.Categories.OrderBy(category => category.Name).ToList();
 
 
-    public Category GetCategory(int id) =>
-        _db.Categories.FirstOrDefault(category => category.Id == id) ?? throw new InvalidOperationException($"La categoria con el id {id} no existe");
+    public Category? GetCategory(int id) =>
+        _db.Categories.FirstOrDefault(category => category.Id == id);
 
     public bool Save() => _db.SaveChanges() >= 0 ? true : false;
 
