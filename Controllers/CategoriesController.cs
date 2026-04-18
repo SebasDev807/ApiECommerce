@@ -4,131 +4,127 @@ using ApiEcommerce.Repositories.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ApiEcommerce.Controllers
+namespace ApiEcommerce.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class CategoriesController : ControllerBase
+
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CategoriesController : ControllerBase
+    private ICategoryRepository _categoryRepository;
+    private readonly IMapper _mapper;
 
+    public CategoriesController(ICategoryRepository categoryRepository, IMapper mapper)
     {
-        private ICategoryRepository _categoryRepository;
-        private readonly IMapper _mapper;
+        _categoryRepository = categoryRepository;
+        _mapper = mapper;
+    }
 
-        public CategoriesController(ICategoryRepository categoryRepository, IMapper mapper)
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult GetCategories()
+    {
+        var categories = _categoryRepository.GetCategories();
+        var categoriesDto = new List<CategoryDto>();
+
+        foreach (var category in categories)
         {
-            _categoryRepository = categoryRepository;
-            _mapper = mapper;
+            categoriesDto.Add(_mapper.Map<CategoryDto>(category));
         }
 
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult GetCategories()
+        return Ok(categoriesDto);
+    }
+
+    [HttpGet("{id:int}", Name = "GetCategory")]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult GetCategory(int id)
+    {
+        var category = _categoryRepository.GetCategory(id);
+
+        if (category == null)
+            return NotFound($"La categoria con el id {id} no existe");
+
+        var categoryDto = _mapper.Map<CategoryDto>(category);
+
+        return Ok(categoryDto);
+    }
+
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    public IActionResult CreateCategory([FromBody] CreateCategoryDto createCategoryDto)
+    {
+        if (createCategoryDto == null)
+            return BadRequest(ModelState);
+
+        if (_categoryRepository.CategoryExists(createCategoryDto.Name))
         {
-            var categories = _categoryRepository.GetCategories();
-            var categoriesDto = new List<CategoryDto>();
-
-            foreach (var category in categories)
-            {
-                categoriesDto.Add(_mapper.Map<CategoryDto>(category));
-            }
-
-            return Ok(categoriesDto);
+            ModelState.AddModelError("CustomError", $"La categoria con el nombre {createCategoryDto.Name} ya existe");
+            return BadRequest(ModelState);
         }
 
-        [HttpGet("{id:int}", Name = "GetCategory")]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult GetCategory(int id)
+        var category = _mapper.Map<Category>(createCategoryDto);
+
+        if (!_categoryRepository.CreateCategory(category))
         {
-            var category = _categoryRepository.GetCategory(id);
-
-            if (category == null)
-                return NotFound($"La categoria con el id {id} no existe");
-
-            var categoryDto = _mapper.Map<CategoryDto>(category);
-
-            return Ok(categoryDto);
+            ModelState.AddModelError("CustomError", $"Ocurrió un error al guardar la categoria {category.Name}");
+            return StatusCode(500, ModelState);
         }
 
-        [HttpPost]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        public IActionResult CreateCategory([FromBody] CreateCategoryDto createCategoryDto)
+        return CreatedAtRoute("GetCategory", new { id = category.Id }, category);
+    }
+    [HttpPatch("{id:int}", Name = "UpdateCategory")]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult UpdateCategtory([FromBody] CreateCategoryDto updateCategoryDto, int id)
+    {
+        if (!_categoryRepository.CategoryExists(id))
+            return NotFound($"La categoria con el id {id} no existe");
+
+        if (updateCategoryDto == null || id <= 0)
+            return BadRequest(ModelState);
+
+        if (_categoryRepository.CategoryExists(updateCategoryDto.Name))
         {
-            if (createCategoryDto == null)
-                return BadRequest(ModelState);
-
-            if (_categoryRepository.CategoryExists(createCategoryDto.Name))
-            {
-                ModelState.AddModelError("CustomError", $"La categoria con el nombre {createCategoryDto.Name} ya existe");
-                return BadRequest(ModelState);
-            }
-
-            var category = _mapper.Map<Category>(createCategoryDto);
-
-            if (!_categoryRepository.CreateCategory(category))
-            {
-                ModelState.AddModelError("CustomError", $"Ocurrió un error al guardar la categoria {category.Name}");
-                return StatusCode(500, ModelState);
-            }
-
-            return CreatedAtRoute("GetCategory", new { id = category.Id }, category);
-        }
-        [HttpPatch("{id:int}", Name = "UpdateCategory")]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult UpdateCategtory([FromBody] CreateCategoryDto updateCategoryDto, int id)
-        {
-            if (!_categoryRepository.CategoryExists(id))
-                return NotFound($"La categoria con el id {id} no existe");
-
-            if (updateCategoryDto == null || id <= 0)
-                return BadRequest(ModelState);
-
-            if (_categoryRepository.CategoryExists(updateCategoryDto.Name))
-            {
-                ModelState.AddModelError("CustomError", $"La categoria con el nombre {updateCategoryDto.Name} ya existe");
-                return BadRequest(ModelState);
-            }
-
-            var category = _mapper.Map<Category>(updateCategoryDto);
-            category.Id = id;
-
-            if (!_categoryRepository.UpdateCategory(category))
-            {
-                ModelState.AddModelError("CustomError", $"Ocurrió un error al actualizar la categoria {category.Name}");
-                return StatusCode(500, ModelState);
-            }
-
-            return NoContent();
+            ModelState.AddModelError("CustomError", $"La categoria con el nombre {updateCategoryDto.Name} ya existe");
+            return BadRequest(ModelState);
         }
 
-        [HttpDelete("{id:int}", Name = "DeleteCategory")]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult DeleteCategory(int id)
+        var category = _mapper.Map<Category>(updateCategoryDto);
+        category.Id = id;
+
+        if (!_categoryRepository.UpdateCategory(category))
         {
-            var category = _categoryRepository.GetCategory(id);
-            
-            if(category == null)
-                return NotFound($"La categoria con el id {id} no existe");
-
-            if (!_categoryRepository.DeleteCategory(category))
-            {
-                ModelState.AddModelError("CustomError", $"Ocurrió un error al eliminar la categoria {category.Name}");
-                return StatusCode(500, ModelState);
-            }
-
-            return NoContent();
+            ModelState.AddModelError("CustomError", $"Ocurrió un error al actualizar la categoria {category.Name}");
+            return StatusCode(500, ModelState);
         }
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}", Name = "DeleteCategory")]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult DeleteCategory(int id)
+    {
+        var category = _categoryRepository.GetCategory(id);
+
+        if (category == null)
+            return NotFound($"La categoria con el id {id} no existe");
+
+        if (!_categoryRepository.DeleteCategory(category))
+        {
+            ModelState.AddModelError("CustomError", $"Ocurrió un error al eliminar la categoria {category.Name}");
+            return StatusCode(500, ModelState);
+        }
+
+        return NoContent();
     }
 }
-
-
-

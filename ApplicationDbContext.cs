@@ -17,4 +17,5 @@ public class ApplicationDbContext : DbContext
     // que se mapea directamente a una tabla física en la base de datos.
     // En este caso: La clase 'Category' se convertirá en la tabla 'Categories'.
     public DbSet<Category> Categories { get; set; }
+    public DbSet<Product> Products { get; set; }
 }
