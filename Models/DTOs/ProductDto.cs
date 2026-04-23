@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace ApiEcommerce.Models.DTOs;
 
 public class ProductDto
@@ -20,8 +22,7 @@ public class ProductDto
     public DateTime? UpdatedAt { get; set; } = null;
 
     //Relacion con Cateegory
-    public int CategoryId { get; set; }
-
-
-    public Category? Category { get; set; }
+    // public int CategoryId { get; set; }
+    [JsonPropertyName("category")]
+    public string CategoryName { get; set; } = string.Empty;
 }

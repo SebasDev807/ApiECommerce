@@ -21,5 +21,4 @@ public class CreateProductDto
     //Relacion con Cateegory
     public int CategoryId { get; set; }
 
-    public Category? Category { get; set; }
 }
