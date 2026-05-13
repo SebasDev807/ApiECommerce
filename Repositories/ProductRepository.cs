@@ -18,7 +18,7 @@ public class ProductRepository : IProductRepository
     /// </summary>
     /// <param name="name">Nombre del producto</param>
     /// <param name="quantity">Cantidad a comprar</param>
-    /// <returns>True si la compra fue exitosa, false en caso contrario</returns>
+        /// <returns>True si la compra fue exitosa, false en caso contrario</returns>
     public bool BuyProduct(string name, int quantity)
     {
         if (string.IsNullOrWhiteSpace(name) || quantity <= 0)
@@ -106,7 +106,10 @@ public class ProductRepository : IProductRepository
         if (categoryId <= 0)
             return new List<Product>();
 
-        return _db.Products.Where(product => product.CategoryId == categoryId).ToList();
+        return _db.Products
+            .Where(product => product.CategoryId == categoryId)
+            .Include(product => product.Category)
+            .ToList();
     }
 
     /// <summary>
@@ -122,11 +125,12 @@ public class ProductRepository : IProductRepository
         return _db.Products.Any(product => product.Id == id);
     }
 
-/// <summary>
-/// Verifica si un producto existe por nombre
-/// </summary>
-/// <param name="name">nombre a buscar</param>
-/// <returns>true si el producto existe</returns>
+    /// <summary>
+    /// Verifica si un producto existe por nombre
+    /// </summary>
+    /// <param name="name">nombre a buscar</param>
+    /// <returns>true si el producto existe</returnoducto a actualizar</param>
+    /// <returns>Return description</returns>
     public bool ProductExists(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -142,24 +146,28 @@ public class ProductRepository : IProductRepository
     public bool Save()
     {
         // SaveChanges devuelve el número de objetos escritos en la base de datos
-        return _db.SaveChanges() >= 0;
+        return _db.SaveChanges() > 0;
     }
 
-/// <summary>
-/// Busca un producto en la base de datos
-/// </summary>
-/// <param name="name">nombre a buscar</param>
-/// <returns>Una lista de productos</returns>
-    public ICollection<Product> SearchProduct(string name)
+    /// <summary>
+    /// Busca un producto en la base de datos
+    /// </summary>
+    /// <param name="name">nombre a buscar</param>
+    /// <returns>Una lista de productos</returns>
+    public ICollection<Product> SearchProducts(string searchTerm)
     {
         IQueryable<Product> query = _db.Products;
+        var searchTermLower = searchTerm.ToLower().Trim();
 
-        if (!string.IsNullOrEmpty(name))
+        if (!string.IsNullOrEmpty(searchTerm))
         {
-            query = query.Where(product => product.Name.ToLower().Trim() == name.ToLower().Trim());
+            query = query.Include(product => product.Category)
+                 .Where(product => product.Name.ToLower().Contains(searchTermLower) ||
+                                   product.Description!.ToLower().Trim().Contains(searchTermLower)
+         );
         }
 
-        return query.ToList();
+        return [.. query.OrderBy(product => product.Name)];
     }
 
     /// <summary>

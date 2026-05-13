@@ -40,7 +40,12 @@ public class CategoryRepository : ICategoryRepository
 
 
     public Category? GetCategory(int id) =>
-        _db.Categories.FirstOrDefault(category => category.Id == id);
+        _db.Categories.FirstOrDefault(category => category.Id == id
+    );
+
+    public Category? GetCategory(string name) =>
+        _db.Categories.FirstOrDefault(category => category.Name.ToLower() == name.ToLower().Trim()
+    );
 
     public bool Save() => _db.SaveChanges() >= 0 ? true : false;
 
