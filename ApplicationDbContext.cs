@@ -18,4 +18,5 @@ public class ApplicationDbContext : DbContext
     // En este caso: La clase 'Category' se convertirá en la tabla 'Categories'.
     public DbSet<Category> Categories { get; set; }
     public DbSet<Product> Products { get; set; }
+    public DbSet<User> Users { get; set; }
 }

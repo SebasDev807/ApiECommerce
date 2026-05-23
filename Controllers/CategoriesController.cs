@@ -1,13 +1,16 @@
+using ApiEcommerce.Constants;
 using ApiEcommerce.Models;
 using ApiEcommerce.Models.DTOs;
 using ApiEcommerce.Repositories.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiEcommerce.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+// [EnableCors(PolicyNames.AllowSpeciefedOrigin)]
 public class CategoriesController : ControllerBase
 
 {

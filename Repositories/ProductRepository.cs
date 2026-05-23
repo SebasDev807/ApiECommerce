@@ -104,12 +104,11 @@ public class ProductRepository : IProductRepository
     public ICollection<Product> GetProductsForCategory(int categoryId)
     {
         if (categoryId <= 0)
-            return new List<Product>();
+            return [];
 
-        return _db.Products
+        return [.. _db.Products
             .Where(product => product.CategoryId == categoryId)
-            .Include(product => product.Category)
-            .ToList();
+            .Include(product => product.Category)];
     }
 
     /// <summary>
